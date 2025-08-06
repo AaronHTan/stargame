@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
 mod renderer;
+mod components;
+mod systems;
 
 #[derive(Component)]
 struct Person;
@@ -55,6 +57,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(HelloPlugin)
-        .add_systems(Startup, renderer::setup_camera)
+        .add_plugins(renderer::Renderer)
         .run();
 }

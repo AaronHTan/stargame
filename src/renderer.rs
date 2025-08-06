@@ -1,17 +1,12 @@
 use bevy::prelude::*;
 
-#[derive(Component)]
-struct MyCameraMarker;
+use crate::systems::graphics::GraphicsPlugin;
+use crate::systems::input::InputPlugin;
 
-pub fn setup_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera3d::default(), 
-        Transform::from_xyz(10.0, 12.0,16.0)
-            .looking_at(Vec3::ZERO, Vec3::Y),
-        MyCameraMarker,
-    ));
-}
+pub struct Renderer;
 
-pub fn setup() {
-    
+impl Plugin for Renderer {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((GraphicsPlugin, InputPlugin));
+    }
 }
