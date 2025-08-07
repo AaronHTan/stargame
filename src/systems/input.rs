@@ -1,4 +1,4 @@
-use std::f32::consts::FRAC_PI_2;
+use std::{f32::consts::FRAC_PI_2};
 
 use bevy::{
     input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll},
@@ -38,25 +38,38 @@ pub fn move_player_keyboard(
     let mut movement = Vec3::ZERO;
     let move_speed = 5.0 * time.delta_secs();
 
-    if keyboard_input.pressed(KeyCode::ArrowUp) || keyboard_input.pressed(KeyCode::KeyW) {
+    // W moves forward (in the direction camera is looking)
+    if keyboard_input.pressed(KeyCode::KeyW) {
         movement.z -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::ArrowDown) || keyboard_input.pressed(KeyCode::KeyS) {
+    // S moves backward (opposite to where camera is looking)
+    if keyboard_input.pressed(KeyCode::KeyS) {
         movement.z += 1.0;
     }
-    if keyboard_input.pressed(KeyCode::ArrowLeft) || keyboard_input.pressed(KeyCode::KeyA) {
+    // A and D for strafing left/right
+    if keyboard_input.pressed(KeyCode::KeyA) {
         movement.x -= 1.0;
     }
-    if keyboard_input.pressed(KeyCode::ArrowRight) || keyboard_input.pressed(KeyCode::KeyD) {
+    if keyboard_input.pressed(KeyCode::KeyD) {
         movement.x += 1.0;
+    }
+    // Space moves up
+    if keyboard_input.pressed(KeyCode::Space) {
+        movement.y += 1.0;
+    }
+    // Shift moves down
+    if keyboard_input.pressed(KeyCode::ShiftLeft) || keyboard_input.pressed(KeyCode::ShiftRight) {
+        movement.y -= 1.0;
     }
 
     if movement.length_squared() > 0.0 {
         movement = movement.normalize();
         let forward = player.forward();
         let right = player.right();
+        let up = player.up();
         
-        let translation_delta = (forward * -movement.z + right * movement.x) * move_speed;
+        // Camera-relative movement: transforms movement from local to world space
+        let translation_delta = (forward * -movement.z + right * movement.x + up * movement.y) * move_speed;
         player.translation += translation_delta;
     }
 }
@@ -69,12 +82,12 @@ pub fn zoom_camera(
         let scroll_delta = accumulated_mouse_scroll.delta.y;
         
         if scroll_delta != 0.0 {
-            if let Projection::Orthographic(ortho) = projection.as_mut() {
-                let zoom_speed = 0.1;
+            if let Projection::Perspective(perspective) = projection.as_mut() {
+                let zoom_speed = 0.05;
                 let zoom_factor = 1.0 - scroll_delta * zoom_speed;
                 
-                ortho.scale *= zoom_factor;
-                ortho.scale = ortho.scale.clamp(0.01, 0.5);
+                perspective.fov *= zoom_factor;
+                perspective.fov = perspective.fov.clamp(15.0_f32.to_radians(), 120.0_f32.to_radians());
             }
         }
     }

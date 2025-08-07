@@ -5,7 +5,7 @@ use bevy::{
 use crate::components::graphics::{Player, WorldModelCamera, VIEW_MODEL_RENDER_LAYER, DEFAULT_RENDER_LAYER};
 use crate::components::input::CameraSensitivity;
 
-pub fn spawn_view_model(
+fn spawn_view_model(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -17,7 +17,7 @@ pub fn spawn_view_model(
         .spawn((
             Player,
             CameraSensitivity::default(),
-            Transform::from_xyz(10.0, 10.0, 10.0)
+            Transform::from_xyz(0.0, 1.0, 0.0)
             .looking_at(Vec3::ZERO, Vec3::Y),
             Visibility::default(),
         ))
@@ -25,9 +25,11 @@ pub fn spawn_view_model(
             parent.spawn((
                 WorldModelCamera,
                 Camera3d::default(),
-                Projection::from(OrthographicProjection {
-                    scale: 0.05,
-                    ..OrthographicProjection::default_3d()
+                Projection::from(PerspectiveProjection {
+                    fov: 60.0_f32.to_radians(),
+                    aspect_ratio: 1.0,
+                    near: 0.1,
+                    far: 1000.0,
                 }),
             ));
 
@@ -37,9 +39,11 @@ pub fn spawn_view_model(
                     order: 1,
                     ..default()
                 },
-                Projection::from(OrthographicProjection {
-                    scale: 0.002,
-                    ..OrthographicProjection::default_3d()
+                Projection::from(PerspectiveProjection {
+                    fov: 60.0_f32.to_radians(),
+                    aspect_ratio: 1.0,
+                    near: 0.01,
+                    far: 10.0,
                 }),
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
             ));
@@ -53,7 +57,7 @@ pub fn spawn_view_model(
         });
 }
 
-pub fn spawn_world_model(
+fn spawn_world_model(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -74,7 +78,28 @@ pub fn spawn_world_model(
         Transform::from_xyz(0.0, 0.25, -3.0),
         RenderLayers::layer(DEFAULT_RENDER_LAYER),
     ));
-
+ 
+    commands.spawn((
+        Mesh3d(cube.clone()),
+        MeshMaterial3d(material.clone()),
+        Transform::from_xyz(1.5, 0.25, -3.0),
+        RenderLayers::layer(DEFAULT_RENDER_LAYER),
+    ));
+    
+    commands.spawn((
+        Mesh3d(cube.clone()),
+        MeshMaterial3d(material.clone()),
+        Transform::from_xyz(1.0, 0.25, -1.0),
+        RenderLayers::layer(DEFAULT_RENDER_LAYER),
+    ));
+    
+    commands.spawn((
+        Mesh3d(cube.clone()),
+        MeshMaterial3d(material.clone()),
+        Transform::from_xyz(0.0, 0.25, 3.0),
+        RenderLayers::layer(DEFAULT_RENDER_LAYER),
+    ));
+       
     commands.spawn((
         Mesh3d(cube),
         MeshMaterial3d(material),
@@ -83,13 +108,32 @@ pub fn spawn_world_model(
     ));
 }
 
+fn spawn_lights(mut commands: Commands) {
+    commands.spawn((
+        DirectionalLight {
+            color: Color::srgb(0.98, 0.95, 0.82),
+            illuminance: 10000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(4.0, 8.0, 4.0)
+            .looking_at(Vec3::ZERO, Vec3::Y),
+    ));
+
+    commands.insert_resource(AmbientLight {
+        color: Color::srgb(0.5, 0.5, 0.5),
+        brightness: 200.0,
+        affects_lightmapped_meshes: true,
+    });
+}
+
 pub struct GraphicsPlugin;
 
 impl Plugin for GraphicsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Startup,
-            (spawn_view_model, spawn_world_model)
+            (spawn_view_model, spawn_world_model, spawn_lights)
         );
     }
 }
