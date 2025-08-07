@@ -4,6 +4,8 @@ mod renderer;
 mod components;
 mod systems;
 
+use systems::{GraphicsPlugin, InputPlugin};
+
 #[derive(Component)]
 struct Person;
 
@@ -57,6 +59,6 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(HelloPlugin)
-        .add_plugins(renderer::Renderer)
+        .add_plugins((GraphicsPlugin, InputPlugin))
         .run();
 }

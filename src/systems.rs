@@ -3,3 +3,6 @@ pub mod gameplay;
 pub mod graphics;
 pub mod input;
 pub mod physics;
+
+pub use graphics::GraphicsPlugin;
+pub use input::InputPlugin;

@@ -1,5 +1,6 @@
 use bevy::{
     color::palettes::tailwind, prelude::*, render::view::RenderLayers,
+    pbr::NotShadowCaster,
 };
 
 use crate::components::graphics::{Player, WorldModelCamera, VIEW_MODEL_RENDER_LAYER, DEFAULT_RENDER_LAYER};
@@ -37,6 +38,7 @@ fn spawn_view_model(
                 Camera3d::default(),
                 Camera {
                     order: 1,
+                    clear_color: ClearColorConfig::None,
                     ..default()
                 },
                 Projection::from(PerspectiveProjection {
@@ -108,7 +110,13 @@ fn spawn_world_model(
     ));
 }
 
-fn spawn_lights(mut commands: Commands) {
+fn spawn_lights(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let light_position = Vec3::new(4.0, 8.0, 4.0);
+    
     commands.spawn((
         DirectionalLight {
             color: Color::srgb(0.98, 0.95, 0.82),
@@ -116,8 +124,24 @@ fn spawn_lights(mut commands: Commands) {
             shadows_enabled: true,
             ..default()
         },
-        Transform::from_xyz(4.0, 8.0, 4.0)
+        Transform::from_translation(light_position)
             .looking_at(Vec3::ZERO, Vec3::Y),
+        RenderLayers::from_layers(&[DEFAULT_RENDER_LAYER, VIEW_MODEL_RENDER_LAYER]),
+    ));
+
+    let sphere = meshes.add(Sphere::new(0.3));
+    let emissive_material = materials.add(StandardMaterial {
+        base_color: Color::srgb(1.0, 0.95, 0.7),
+        emissive: LinearRgba::rgb(10.0, 9.5, 7.0),
+        ..default()
+    });
+
+    commands.spawn((
+        Mesh3d(sphere),
+        MeshMaterial3d(emissive_material),
+        Transform::from_translation(light_position),
+        RenderLayers::layer(DEFAULT_RENDER_LAYER),
+        NotShadowCaster,
     ));
 
     commands.insert_resource(AmbientLight {
